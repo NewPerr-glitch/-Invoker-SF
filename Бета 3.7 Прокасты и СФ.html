@@ -1,0 +1,2010 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тренажёр: Invoker и SF</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background: #050608;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #d1d1d1;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            transition: background 0.5s ease;
+        }
+
+        body.bg-default, #game-screen.bg-default, #shop-screen.bg-default { background: #050608; }
+        body.bg-exort, #game-screen.bg-exort, #shop-screen.bg-exort { background: linear-gradient(135deg, #2b0000 0%, #110000 50%, #050000 100%); }
+        body.bg-quas, #game-screen.bg-quas, #shop-screen.bg-quas { background: linear-gradient(135deg, #001f3f 0%, #000c18 50%, #020509 100%); }
+        body.bg-wex, #game-screen.bg-wex, #shop-screen.bg-wex { background: linear-gradient(135deg, #2a003b 0%, #12001c 50%, #050008 100%); }
+        body.bg-roshan, #game-screen.bg-roshan, #shop-screen.bg-roshan { background: linear-gradient(135deg, #3d2b00 0%, #1a1200 50%, #0a0700 100%); }
+        body.bg-abyss, #game-screen.bg-abyss, #shop-screen.bg-abyss { background: linear-gradient(135deg, #120024 0%, #080012 50%, #020005 100%); }
+        body.bg-neon, #game-screen.bg-neon, #shop-screen.bg-neon { background: linear-gradient(135deg, #003333 0%, #001a1a 50%, #000d0d 100%); }
+        body.bg-forest, #game-screen.bg-forest, #shop-screen.bg-forest { background: linear-gradient(135deg, #002b00 0%, #001400 50%, #000800 100%); }
+        body.bg-bloody, #game-screen.bg-bloody, #shop-screen.bg-bloody { background: linear-gradient(135deg, #400000 0%, #200000 50%, #080000 100%); }
+        body.bg-crystal, #game-screen.bg-crystal, #shop-screen.bg-crystal { background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #020617 100%); }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, rgba(15, 10, 12, 0.6) 0%, rgba(5, 5, 8, 0.85) 100%);
+            backdrop-filter: blur(4px);
+            z-index: 0;
+        }
+
+        #bg-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+        }
+
+        .main-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 1380px;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(14, 16, 20, 0.95);
+            padding: 10px 20px;
+            border: 2px solid #2a2e38;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dota-logo {
+            width: 32px;
+            height: 32px;
+            background: url('https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png') no-repeat center center;
+            background-size: contain;
+            filter: drop-shadow(0 0 5px #e74c3c);
+        }
+
+        .app-title {
+            color: #e2b041;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(226, 176, 65, 0.4);
+        }
+
+        .header-right-tools {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .auth-user-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #2ecc71;
+        }
+
+        .user-name-display {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .btn-auth-action {
+            background: #c0392b;
+            color: #fff;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-auth-action:hover { background: #e74c3c; }
+
+        /* Окно авторизации */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-card {
+            background: #14171d;
+            border: 2px solid #e2b041;
+            border-radius: 8px;
+            padding: 25px;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 0 30px rgba(226, 176, 65, 0.2);
+        }
+
+        .auth-title {
+            color: #e2b041;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .auth-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .auth-input-group label {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .auth-input {
+            background: #090a0c;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .auth-input:focus { border-color: #e2b041; }
+
+        .auth-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-login {
+            flex: 1;
+            background: #2ecc71;
+            color: #000;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-register {
+            flex: 1;
+            background: #e2b041;
+            color: #000;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .music-player-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .music-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .music-btn:hover { color: #5dedff; transform: scale(1.1); }
+
+        .volume-slider {
+            width: 70px;
+            accent-color: #3498db;
+            cursor: pointer;
+        }
+
+        .file-upload-btn {
+            font-size: 10px;
+            background: #232731;
+            color: #aaa;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .file-upload-btn:hover { color: #fff; border-color: #3498db; }
+
+        .coins-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #f1c40f;
+            color: #f1c40f;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 0 8px rgba(241, 196, 15, 0.3);
+        }
+
+        /* Экран Игры */
+        #game-screen {
+            display: flex;
+            gap: 20px;
+            background: rgba(14, 16, 20, 0.92);
+            padding: 20px;
+            border: 2px solid #2a2e38;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.95);
+            transition: background 0.5s ease;
+        }
+
+        /* Экран Магазина */
+        #shop-screen {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(14, 16, 20, 0.95);
+            padding: 25px;
+            border: 2px solid #8e44ad;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(142, 68, 173, 0.4);
+            min-height: 75vh;
+            transition: background 0.5s ease;
+        }
+
+        .shop-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 12px;
+        }
+
+        .shop-page-title {
+            color: #9b59b6;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back-main {
+            background: #2c3e50;
+            color: #fff;
+            border: 1px solid #34495e;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-back-main:hover { background: #34495e; border-color: #e2b041; color: #e2b041; }
+
+        .shop-grid-large {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .bg-card-large {
+            background: #14171d;
+            border: 2px solid #2c303c;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .bg-card-large:hover { border-color: #8e44ad; transform: translateY(-3px); }
+        .bg-card-large.active-equipped { border-color: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.3); }
+
+        .bg-card-info { display: flex; flex-direction: column; gap: 4px; }
+        .bg-card-title { font-size: 16px; font-weight: bold; color: #fff; }
+        .bg-card-price { font-size: 14px; color: #f1c40f; font-weight: bold; }
+
+        .bg-card-actions { display: flex; gap: 8px; }
+
+        .bg-btn {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .bg-btn-preview { background: #3498db; color: #fff; }
+        .bg-btn-preview:hover { background: #5dedff; color: #000; }
+        .bg-btn-buy { background: #f1c40f; color: #000; }
+        .bg-btn-buy:hover { background: #f39c12; }
+        .bg-btn-equip { background: #2ecc71; color: #fff; }
+        .bg-btn-equip:hover { background: #27ae60; }
+        .bg-btn-active { background: #34495e; color: #aaa; cursor: default; }
+
+        .sidebar-left {
+            width: 280px;
+            background: #1a1d24;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2e3440;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-left h3, .sidebar-right h3 {
+            color: #e2b041;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+        }
+
+        .key-list p { font-size: 12px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; }
+        .key { color: #fff; font-weight: bold; background: #2b313e; padding: 2px 6px; border-radius: 3px; border: 1px solid #444; }
+
+        .key-input {
+            width: 40px;
+            text-align: center;
+            background: #111318;
+            border: 1px solid #e2b041;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 4px;
+            padding: 2px;
+            outline: none;
+        }
+
+        .mode-select {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            background: #15181e;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .btn-action {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .btn-start { background: #e2b041; color: #000; }
+        .btn-start:hover { background: #f5c85d; }
+        .btn-restart { background: #34495e; color: #fff; border: 1px solid #4a6278; }
+        .btn-restart:hover { background: #415b76; }
+        .btn-shop { background: #8e44ad; color: #fff; border: 1px solid #9b59b6; margin-top: 5px; }
+        .btn-shop:hover { background: #9b59b6; }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(9, 10, 12, 0.95);
+            border: 1px solid #252830;
+            padding: 15px;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .center-timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            background: rgba(21, 24, 30, 0.8);
+            border: 1px solid #333842;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .status-text { font-size: 13px; color: #888; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+        .timer-display {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 38px;
+            color: #e74c3c;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        .target-box { text-align: center; margin-top: 5px; width: 100%; }
+        .combo-sequence {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .spell-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.4;
+            transition: all 0.2s ease;
+        }
+
+        .spell-card.active { opacity: 1; transform: scale(1.08); }
+        .spell-card.done { opacity: 0.2; filter: grayscale(100%); }
+
+        @keyframes spellCastSuccess {
+            0% { transform: scale(1.3); box-shadow: 0 0 25px #2ecc71; border-color: #2ecc71; }
+            100% { transform: scale(1.08); box-shadow: 0 0 12px rgba(226, 176, 65, 0.3); }
+        }
+
+        .spell-card.spell-card-success .spell-icon-large {
+            animation: spellCastSuccess 0.4s ease-out;
+        }
+
+        .spell-icon-large {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            border: 2px solid #e2b041;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 0 12px rgba(226, 176, 65, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .spell-name-text { font-size: 9px; color: #e2b041; margin-top: 3px; max-width: 75px; text-align: center; word-wrap: break-word; }
+
+        .eul-arena {
+            width: 100%; height: 150px; border: 1px solid #333; background: #111318; border-radius: 6px; margin-top: 5px;
+            position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 8px;
+        }
+
+        .eul-progress-bar { width: 90%; height: 24px; background: #222; border-radius: 12px; border: 1px solid #444; position: relative; }
+        .eul-fill { height: 100%; width: 0%; background: #e74c3c; border-radius: 12px 0 0 12px; }
+        .eul-sweet-spot {
+            position: absolute; top: 0; bottom: 0; left: 33.2%; width: 9.6%;
+            background: rgba(46, 204, 113, 0.4); border-left: 2px dashed #2ecc71; border-right: 2px dashed #2ecc71; z-index: 1;
+        }
+        .sweet-spot-label { position: absolute; top: -18px; left: 33.2%; font-size: 10px; color: #2ecc71; font-weight: bold; white-space: nowrap; }
+        .hit-marker { position: absolute; top: -5px; bottom: -5px; width: 4px; background: #3498db; box-shadow: 0 0 8px #3498db; z-index: 2; display: none; }
+        .eul-status-msg { font-size: 13px; font-weight: bold; color: #fff; }
+        .timeline-guide { display: flex; justify-content: space-between; width: 90%; font-size: 10px; color: #888; border-top: 1px solid #333; padding-top: 4px; }
+
+        .orbs-container { display: flex; gap: 12px; margin: 6px 0; min-height: 40px; }
+        .orb-slot {
+            width: 40px; height: 40px; border-radius: 50%; background: #181b22; border: 2px dashed #444;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; font-size: 14px;
+            transition: all 0.15s ease-out;
+        }
+        .orb-q { background: radial-gradient(circle, #2980b9, #000); border: 2px solid #3498db; box-shadow: 0 0 12px #3498db; transform: scale(1.05); }
+        .orb-w { background: radial-gradient(circle, #8e44ad, #000); border: 2px solid #9b59b6; box-shadow: 0 0 12px #9b59b6; transform: scale(1.05); }
+        .orb-e { background: radial-gradient(circle, #d35400, #000); border: 2px solid #e67e22; box-shadow: 0 0 12px #e67e22; transform: scale(1.05); }
+
+        .bottom-gear-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #12141a;
+            padding: 8px 14px;
+            border: 1px solid #2d323f;
+            border-radius: 6px;
+            margin: 4px 0;
+        }
+
+        .inventory-wrapper { display: flex; flex-direction: column; align-items: center; }
+        .inventory-header { font-size: 11px; color: #e2b041; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 4px; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(2, 36px); gap: 5px; }
+
+        .inventory-slot {
+            width: 52px; height: 36px; background: #0a0b0e; border: 1px solid #3a3f4d; border-radius: 4px;
+            background-size: cover; background-position: center; position: relative; cursor: pointer; transition: 0.2s;
+        }
+        .inventory-slot:hover { border-color: #e2b041; }
+        .inventory-slot.selected { border: 2px solid #e2b041; box-shadow: 0 0 8px rgba(226, 176, 65, 0.8); }
+        .inventory-slot.active-item { border-color: #2ecc71; box-shadow: 0 0 8px rgba(46, 204, 113, 0.7); }
+
+        .slot-remove-btn {
+            position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; background: #e74c3c; color: #fff;
+            font-size: 10px; font-weight: bold; border-radius: 50%; display: none; align-items: center; justify-content: center;
+            line-height: 1; box-shadow: 0 0 4px #000; z-index: 10;
+        }
+        .inventory-slot:hover .slot-remove-btn.has-item { display: flex; }
+
+        .item-key-bind {
+            position: absolute; bottom: 1px; right: 2px; font-size: 8px; color: #fff;
+            background: rgba(0, 0, 0, 0.8); padding: 0 3px; border-radius: 2px; font-weight: bold; border: 1px solid #444; pointer-events: none;
+        }
+
+        .shop-wrapper { display: flex; flex-direction: column; align-items: center; border-left: 1px solid #2d323f; padding-left: 12px; }
+        .shop-title { font-size: 11px; color: #e2b041; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 4px; }
+        .shop-grid { display: flex; gap: 6px; }
+
+        .shop-item {
+            background: #15171e; border: 1px solid #333; border-radius: 4px; padding: 3px; display: flex;
+            flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; width: 48px;
+        }
+        .shop-item:hover { border-color: #e2b041; background: #222632; transform: translateY(-2px); }
+        .shop-item-icon { width: 40px; height: 28px; border-radius: 3px; background-size: cover; background-position: center; border: 1px solid #444; }
+        .shop-item-name { font-size: 7px; color: #ccc; margin-top: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+        .builder-controls { display: flex; gap: 8px; margin-top: 6px; width: 100%; justify-content: center; }
+        .btn-builder { padding: 4px 8px; font-size: 10px; background: #27ae60; color: #fff; border: none; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .btn-builder-clear { background: #c0392b; }
+
+        .invoked-box { text-align: center; }
+        .invoked-spell {
+            width: 44px; height: 44px; background: #15181e; border: 2px solid #555; border-radius: 6px; margin: 2px auto; background-size: cover; background-position: center;
+            transition: all 0.2s ease;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1.2); box-shadow: 0 0 20px #e2b041; border-color: #f1c40f; }
+            100% { transform: scale(1.0); box-shadow: 0 0 5px rgba(226, 176, 65, 0.5); border-color: #555; }
+        }
+
+        .invoked-spell.pulse-glow { animation: pulseGlow 0.35s ease-out; }
+
+        .sidebar-right {
+            width: 400px;
+            background: #1a1d24;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #2e3440;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+
+        .leaderboard-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; }
+        .leaderboard-table th, .leaderboard-table td { padding: 4px 2px; text-align: left; border-bottom: 1px solid #2e3440; }
+        .leaderboard-table th { color: #888; }
+        .leaderboard-table td.val { color: #e2b041; font-weight: bold; text-align: right; }
+
+        .recipes-section { display: flex; flex-direction: column; }
+        .spell-recipes { display: flex; flex-direction: column; gap: 5px; font-size: 11px; }
+        .recipe-item { 
+            display: flex; align-items: center; justify-content: space-between; background: #15171e; 
+            padding: 5px 8px; border-radius: 4px; cursor: pointer; border: 1px solid #2c303c; transition: 0.15s;
+        }
+        .recipe-item:hover { background: #222632; border-color: #e2b041; }
+        .recipe-left { display: flex; align-items: center; gap: 8px; }
+        .mini-icon { width: 24px; height: 24px; border-radius: 3px; background-size: cover; border: 1px solid #444; }
+    </style>
+</head>
+<body class="bg-default">
+
+<!-- Модальное окно авторизации -->
+<div id="auth-modal" class="auth-modal-overlay">
+    <div class="auth-card">
+        <div class="auth-title">Вход в Аккаунт</div>
+        <div class="auth-input-group">
+            <label>Логин</label>
+            <input type="text" id="auth-username" class="auth-input" placeholder="Введите имя...">
+        </div>
+        <div class="auth-input-group">
+            <label>Пароль</label>
+            <input type="password" id="auth-password" class="auth-input" placeholder="Пароль...">
+        </div>
+        <div class="auth-btns">
+            <button class="btn-login" onclick="loginUser()">Войти</button>
+            <button class="btn-register" onclick="registerUser()">Создать</button>
+        </div>
+    </div>
+</div>
+
+<canvas id="bg-canvas"></canvas>
+
+<audio id="bg-audio" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
+
+<div class="main-wrapper">
+    <div class="app-header">
+        <div class="header-title-box">
+            <div class="dota-logo"></div>
+            <div class="app-title">Invoker & SF Trainer</div>
+        </div>
+        
+        <div class="header-right-tools">
+            <div class="auth-user-bar">
+                <span>👤</span>
+                <span id="current-user-display" class="user-name-display">Гость</span>
+                <button class="btn-auth-action" onclick="logoutUser()">Выход</button>
+            </div>
+
+            <div class="music-player-panel">
+                <button class="music-btn" id="play-pause-btn" onclick="toggleAudio()" title="Воспроизвести / Пауза">▶</button>
+                <input type="range" class="volume-slider" id="volume-control" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" title="Громкость">
+                <label class="file-upload-btn">
+                    + Свой трек
+                    <input type="file" id="custom-audio-file" accept="audio/*" style="display: none;" onchange="loadCustomAudio(event)">
+                </label>
+            </div>
+
+            <div class="coins-display">
+                <span>🪙</span>
+                <span id="coins-count">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Главный экран тренажёра -->
+    <div id="game-screen" class="bg-default">
+        <div class="sidebar-left">
+            <div>
+                <h3>Режим игры</h3>
+                <select id="game-mode" class="mode-select" onchange="onModeChange()">
+                    <option value="speed">Invoker: Скорость (10 заклинаний)</option>
+                    <option value="invoker_combo">Invoker: Прокасты (Спеллы)</option>
+                    <option value="sf">SF Комбо: Blink + Eul + Requiem</option>
+                </select>
+
+                <div id="invoker-combo-select-box" style="display: none; margin-top: 8px;">
+                    <h3>Выбор Прокаста</h3>
+                    <select id="invoker-combo-select" class="mode-select" onchange="onComboSelectChange()">
+                        <option value="custom_builder">⚙️ Конструктор (Собери сам)</option>
+                        <option value="short_cold_alacrity">⚡ Cold Snap + Alacrity (2 скилла)</option>
+                        <option value="short_tornado_meteor">🔥 Tornado + Meteor (2 скилла)</option>
+                        <option value="short_snap_spirits">🐺 Cold Snap + Forge Spirit (2 скилла)</option>
+                        <option value="short_tornado_emp">🌀 Tornado + EMP (2 скилла)</option>
+                        <option value="mid_classic_nado_meteor">💥 Торнадо + Метеор + Бласт (3 скилла)</option>
+                        <option value="mid_icewall_snap">🧊 Cold Snap + Ice Wall + Forge Spirit (3 скилла)</option>
+                        <option value="mid_emp_nado_snap">⚡ Tornado + EMP + Cold Snap (3 скилла)</option>
+                        <option value="long_4spell_burst">🌟 Tornado + EMP + Meteor + Blast (4 скилла)</option>
+                        <option value="long_5spell_full">💣 Tornado + EMP + Meteor + Blast + Sun Strike (5 скиллов)</option>
+                        <option value="long_cataclysm_combo">☄️ Tornado + Sun Strike + Meteor + Blast + EMP (5 скиллов)</option>
+                    </select>
+
+                    <div id="builder-controls-box" class="builder-controls" style="margin-top: 6px;">
+                        <button class="btn-builder btn-builder-clear" onclick="clearCustomBuilder()">Сбросить список</button>
+                    </div>
+                </div>
+
+                <br>
+
+                <div id="invoker-key-settings">
+                    <h3>Управление Invoker</h3>
+                    <div class="key-list">
+                        <p>Quas: <span class="key">Q</span></p>
+                        <p>Wex: <span class="key">W</span></p>
+                        <p>Exort: <span class="key">E</span></p>
+                        <p>Invoke: <span class="key">R</span></p>
+                    </div>
+                </div>
+
+                <div id="inventory-key-settings" style="margin-top: 8px;">
+                    <h3>Настройка Инвентаря</h3>
+                    <div class="key-list">
+                        <p>Слот 1: <input type="text" id="key-inv-0" class="key-input" value="1" maxlength="1" oninput="updateInventoryBinds()"></p>
+                        <p>Слот 2: <input type="text" id="key-inv-1" class="key-input" value="2" maxlength="1" oninput="updateInventoryBinds()"></p>
+                        <p>Слот 3: <input type="text" id="key-inv-2" class="key-input" value="3" maxlength="1" oninput="updateInventoryBinds()"></p>
+                        <p>Слот 4: <input type="text" id="key-inv-3" class="key-input" value="4" maxlength="1" oninput="updateInventoryBinds()"></p>
+                        <p>Слот 5: <input type="text" id="key-inv-4" class="key-input" value="5" maxlength="1" oninput="updateInventoryBinds()"></p>
+                        <p>Слот 6: <input type="text" id="key-inv-5" class="key-input" value="6" maxlength="1" oninput="updateInventoryBinds()"></p>
+                    </div>
+                </div>
+
+                <div id="sf-key-settings" style="display: none;">
+                    <h3>Настройка клавиш SF</h3>
+                    <div class="key-list">
+                        <p>Blink: <input type="text" id="key-sf-blink" class="key-input" value="Z" maxlength="1" oninput="updateSFKeys()"></p>
+                        <p>Eul: <input type="text" id="key-sf-eul" class="key-input" value="X" maxlength="1" oninput="updateSFKeys()"></p>
+                        <p>BKB: <input type="text" id="key-sf-bkb" class="key-input" value="C" maxlength="1" oninput="updateSFKeys()"></p>
+                        <p>Requiem: <input type="text" id="key-sf-ult" class="key-input" value="R" maxlength="1" oninput="updateSFKeys()"></p>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-action btn-start" onclick="startGame()">СТАРТ (N)</button>
+                    <button class="btn-action btn-restart" onclick="restartGame()">РЕСТАРТ (M)</button>
+                    <button class="btn-action btn-shop" onclick="navigateToShop()">🖼️ Магазин Фонов</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <h3>Прогресс</h3>
+                <p style="font-size: 12px;">Выполнено: <span id="invoke-count" style="color:#e2b041; font-weight:bold;">0</span> / <span id="target-count">10</span></p>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="center-timer-container">
+                <div class="status-text" id="game-status">Нажмите N для старта</div>
+                <div class="timer-display" id="timer-val">00.000</div>
+            </div>
+
+            <div class="target-box">
+                <div>Текущая задача:</div>
+                <div id="combo-container" class="combo-sequence"></div>
+                
+                <div id="eul-arena-box" class="eul-arena" style="display: none;">
+                    <div id="eul-status-text" class="eul-status-msg">Примените Blink, затем Eul для старта</div>
+                    <div class="eul-progress-bar">
+                        <div class="sweet-spot-label">🎯 Каст Requiem (0.83s)</div>
+                        <div class="eul-sweet-spot"></div>
+                        <div id="hit-marker" class="hit-marker"></div>
+                        <div id="eul-fill-bar" class="eul-fill"></div>
+                    </div>
+                    <div class="timeline-guide">
+                        <span>0s (Eul Start)</span>
+                        <span style="color: #2ecc71;">0.83s (Нажмите Requiem)</span>
+                        <span>2.5s (Приземление)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="orbs-container" id="orbs-wrapper">
+                <div id="orb1" class="orb-slot"></div>
+                <div id="orb2" class="orb-slot"></div>
+                <div id="orb3" class="orb-slot"></div>
+            </div>
+
+            <div class="bottom-gear-container" id="gear-box" style="display: none;">
+                <div class="inventory-wrapper">
+                    <div class="inventory-header">Инвентарь (2x3)</div>
+                    <div class="inventory-grid">
+                        <div class="inventory-slot" id="inv-slot-0" onclick="onInventorySlotClick(0)" oncontextmenu="onInventorySlotRightClick(event, 0)"></div>
+                        <div class="inventory-slot" id="inv-slot-1" onclick="onInventorySlotClick(1)" oncontextmenu="onInventorySlotRightClick(event, 1)"></div>
+                        <div class="inventory-slot" id="inv-slot-2" onclick="onInventorySlotClick(2)" oncontextmenu="onInventorySlotRightClick(event, 2)"></div>
+                        <div class="inventory-slot" id="inv-slot-3" onclick="onInventorySlotClick(3)" oncontextmenu="onInventorySlotRightClick(event, 3)"></div>
+                        <div class="inventory-slot" id="inv-slot-4" onclick="onInventorySlotClick(4)" oncontextmenu="onInventorySlotRightClick(event, 4)"></div>
+                        <div class="inventory-slot" id="inv-slot-5" onclick="onInventorySlotClick(5)" oncontextmenu="onInventorySlotRightClick(event, 5)"></div>
+                    </div>
+                </div>
+
+                <div class="shop-wrapper">
+                    <div class="shop-title">Магазин</div>
+                    <div class="shop-grid" id="shop-items-grid"></div>
+                </div>
+            </div>
+
+            <div class="invoked-box">
+                <div style="font-size:11px; color:#aaa;">Синтезировано:</div>
+                <div id="invoked-icon" class="invoked-spell"></div>
+                <div id="invoked-name" style="font-size: 11px; color:#fff;">Пусто</div>
+            </div>
+        </div>
+
+        <div class="sidebar-right">
+            <div class="records-section">
+                <h3>🏆 Рекорды</h3>
+                <table class="leaderboard-table">
+                    <tr>
+                        <th>Режим</th>
+                        <th style="text-align:right;">Рекорд</th>
+                    </tr>
+                    <tr>
+                        <td>Invoker Скорость</td>
+                        <td class="val" id="record-speed">--</td>
+                    </tr>
+                    <tr>
+                        <td>Invoker Прокасты</td>
+                        <td class="val" id="record-combo">--</td>
+                    </tr>
+                    <tr>
+                        <td>SF Комбо (10x)</td>
+                        <td class="val" id="record-sf">--</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="recipes-section">
+                <h3 id="recipes-title">Заклинания Invoker</h3>
+                <div class="spell-recipes" id="recipes-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Отдельный Экран Магазина Фонов -->
+    <div id="shop-screen" class="bg-default">
+        <div class="shop-header-bar">
+            <div class="shop-page-title">
+                <span>🖼️</span> Магазин Фонов и Визуальных Тем
+            </div>
+            <button class="btn-back-main" onclick="navigateToGame()">
+                ⬅ Вернуться на главную
+            </button>
+        </div>
+
+        <div class="shop-grid-large" id="bg-shop-page-grid"></div>
+    </div>
+</div>
+
+<script>
+    // --- Логика Регистрации и Аккаунтов ---
+    let currentUser = null;
+    let usersData = JSON.parse(localStorage.getItem('dota_users_db')) || {};
+
+    let coins = 0;
+    let purchasedBgs = ['bg-default'];
+    let activeBg = 'bg-default';
+    let customBgUrl = null;
+    let userRecords = { speed: null, combo: null, sf: null };
+
+    function initAuth() {
+        const lastUser = localStorage.getItem('dota_active_user');
+        if (lastUser && usersData[lastUser]) {
+            loginAs(lastUser);
+        } else {
+            document.getElementById('auth-modal').style.display = 'flex';
+        }
+    }
+
+    function registerUser() {
+        const name = document.getElementById('auth-username').value.trim();
+        const pass = document.getElementById('auth-password').value.trim();
+
+        if (!name || !pass) {
+            alert('Введите логин и пароль!');
+            return;
+        }
+
+        if (usersData[name]) {
+            alert('Пользователь с таким именем уже существует!');
+            return;
+        }
+
+        usersData[name] = {
+            password: pass,
+            coins: 0,
+            purchasedBgs: ['bg-default'],
+            activeBg: 'bg-default',
+            customBgUrl: null,
+            records: { speed: null, combo: null, sf: null }
+        };
+
+        saveUsersData();
+        loginAs(name);
+    }
+
+    function loginUser() {
+        const name = document.getElementById('auth-username').value.trim();
+        const pass = document.getElementById('auth-password').value.trim();
+
+        if (!usersData[name] || usersData[name].password !== pass) {
+            alert('Неверное имя пользователя или пароль!');
+            return;
+        }
+
+        loginAs(name);
+    }
+
+    function loginAs(username) {
+        currentUser = username;
+        localStorage.setItem('dota_active_user', username);
+        
+        const data = usersData[username];
+        coins = data.coins || 0;
+        purchasedBgs = data.purchasedBgs || ['bg-default'];
+        activeBg = data.activeBg || 'bg-default';
+        customBgUrl = data.customBgUrl || null;
+        userRecords = data.records || { speed: null, combo: null, sf: null };
+
+        document.getElementById('current-user-display').innerText = username;
+        document.getElementById('coins-count').innerText = coins;
+        document.getElementById('auth-modal').style.display = 'none';
+
+        applyActiveBg();
+        loadLeaderboard();
+    }
+
+    function logoutUser() {
+        saveCurrentUserData();
+        currentUser = null;
+        localStorage.removeItem('dota_active_user');
+        document.getElementById('auth-modal').style.display = 'flex';
+    }
+
+    function saveUsersData() {
+        localStorage.setItem('dota_users_db', JSON.stringify(usersData));
+    }
+
+    function saveCurrentUserData() {
+        if (!currentUser) return;
+        usersData[currentUser] = {
+            ...usersData[currentUser],
+            coins: coins,
+            purchasedBgs: purchasedBgs,
+            activeBg: activeBg,
+            customBgUrl: customBgUrl,
+            records: userRecords
+        };
+        saveUsersData();
+    }
+
+    // --- Анимация заднего фона ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let burstParticles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = canvas.height + Math.random() * 100;
+            this.size = Math.random() * 3 + 1;
+            this.speedY = Math.random() * 1.5 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.5;
+            this.opacity = Math.random() * 0.6 + 0.2;
+            this.color = Math.random() > 0.4 ? '#e74c3c' : '#e2b041';
+        }
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX;
+            if (this.y < -10) this.reset();
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.opacity;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    class BurstParticle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color || '#2ecc71';
+            this.size = Math.random() * 5 + 2;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 8 + 2;
+            this.speedX = Math.cos(angle) * speed;
+            this.speedY = Math.sin(angle) * speed;
+            this.opacity = 1.0;
+            this.gravity = 0.15;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.speedY += this.gravity;
+            this.opacity -= 0.025;
+        }
+        draw() {
+            if (this.opacity <= 0) return;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = Math.max(0, this.opacity);
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = this.color;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    function createCastBurstEffect(color = '#2ecc71', count = 30) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        for (let i = 0; i < count; i++) {
+            burstParticles.push(new BurstParticle(centerX, centerY, color));
+        }
+    }
+
+    for (let i = 0; i < 50; i++) particles.push(new Particle());
+    function animateBackground() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+
+        for (let i = burstParticles.length - 1; i >= 0; i--) {
+            const bp = burstParticles[i];
+            bp.update();
+            bp.draw();
+            if (bp.opacity <= 0) {
+                burstParticles.splice(i, 1);
+            }
+        }
+
+        requestAnimationFrame(animateBackground);
+    }
+    animateBackground();
+
+    const audio = document.getElementById('bg-audio');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    audio.volume = 0.3;
+
+    function toggleAudio() {
+        if (audio.paused) {
+            audio.play();
+            playPauseBtn.innerText = '⏸';
+        } else {
+            audio.pause();
+            playPauseBtn.innerText = '▶';
+        }
+    }
+
+    function changeVolume(val) { audio.volume = val; }
+
+    function loadCustomAudio(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            audio.src = fileURL;
+            audio.play();
+            playPauseBtn.innerText = '⏸';
+        }
+    }
+
+    const backgroundList = [
+        { id: 'bg-default', name: 'Тёмный Стандарт', price: 0, desc: 'Классическая тёмная атмосфера' },
+        { id: 'bg-exort', name: '🔥 Огненный Exort', price: 300, desc: 'Пламенный градиент стихии Exort' },
+        { id: 'bg-quas', name: '❄️ Ледяной Quas', price: 300, desc: 'Холодные синие тона стихии Quas' },
+        { id: 'bg-wex', name: '⚡ Штормовой Wex', price: 300, desc: 'Фиолетовые молнии стихии Wex' },
+        { id: 'bg-roshan', name: '🪙 Золотой Roshan', price: 800, desc: 'Роскошный золотой стиль' },
+        { id: 'bg-abyss', name: '🌌 Фиолетовая Бездна', price: 1200, desc: 'Глубокий космос и магия' },
+        { id: 'bg-neon', name: '🏙️ Киберпанк Неон', price: 1800, desc: 'Яркие бирюзовые неоновые оттенки' },
+        { id: 'bg-forest', name: '🌿 Магический Лес', price: 2500, desc: 'Атмосфера чащобы и природы' },
+        { id: 'bg-bloody', name: '🩸 Кровавый Shadow Fiend', price: 3500, desc: 'Тёмно-алый цвет душ' },
+        { id: 'bg-crystal', name: '💎 Кристальная Заря', price: 5000, desc: 'Элегантный стальной стиль' },
+        { id: 'bg-custom', name: '🎨 Кастомный фон', price: 10000, desc: 'Загрузите изображение по URL' }
+    ];
+
+    let previewBg = null;
+
+    function applyActiveBg() {
+        const targetClass = previewBg || activeBg;
+        
+        if (targetClass === 'bg-custom' && customBgUrl) {
+            document.body.className = '';
+            document.body.style.backgroundImage = `url('${customBgUrl}')`;
+            
+            const gameScreen = document.getElementById('game-screen');
+            const shopScreen = document.getElementById('shop-screen');
+            if (gameScreen) { gameScreen.className = ''; gameScreen.style.backgroundImage = `url('${customBgUrl}')`; }
+            if (shopScreen) { shopScreen.className = ''; shopScreen.style.backgroundImage = `url('${customBgUrl}')`; }
+        } else {
+            document.body.style.backgroundImage = '';
+            document.body.className = targetClass;
+            
+            const gameScreen = document.getElementById('game-screen');
+            const shopScreen = document.getElementById('shop-screen');
+            if (gameScreen) { gameScreen.style.backgroundImage = ''; gameScreen.className = targetClass; }
+            if (shopScreen) { shopScreen.style.backgroundImage = ''; shopScreen.className = targetClass; }
+        }
+    }
+
+    function navigateToShop() {
+        previewBg = null;
+        renderBgShopPage();
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('shop-screen').style.display = 'flex';
+        applyActiveBg();
+    }
+
+    function navigateToGame() {
+        previewBg = null;
+        applyActiveBg();
+        document.getElementById('shop-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+    }
+
+    function previewBgStyle(bgId) {
+        previewBg = bgId;
+        applyActiveBg();
+        renderBgShopPage();
+    }
+
+    function renderBgShopPage() {
+        const grid = document.getElementById('bg-shop-page-grid');
+        grid.innerHTML = '';
+
+        backgroundList.forEach(bg => {
+            const isOwned = purchasedBgs.includes(bg.id);
+            const currentEffectiveBg = previewBg || activeBg;
+            const isCurrentlyShown = currentEffectiveBg === bg.id;
+
+            const card = document.createElement('div');
+            card.className = `bg-card-large ${activeBg === bg.id && !previewBg ? 'active-equipped' : ''}`;
+
+            let btnHtml = '<div class="bg-card-actions">';
+
+            if (!isOwned) {
+                if (bg.id !== 'bg-custom') {
+                    btnHtml += `<button class="bg-btn bg-btn-preview" onclick="previewBgStyle('${bg.id}')">👁️ Тест</button>`;
+                }
+                btnHtml += `<button class="bg-btn bg-btn-buy" onclick="buyBg('${bg.id}', ${bg.price})">Купить</button>`;
+            } else {
+                if (bg.id === 'bg-custom') {
+                    btnHtml += `<button class="bg-btn bg-btn-preview" onclick="changeCustomBgUrl()">✏️ Изменить URL</button>`;
+                }
+                if (activeBg === bg.id && !previewBg) {
+                    btnHtml += `<button class="bg-btn bg-btn-active">Надето</button>`;
+                } else {
+                    btnHtml += `<button class="bg-btn bg-btn-equip" onclick="equipBg('${bg.id}')">Надеть</button>`;
+                }
+            }
+
+            btnHtml += '</div>';
+
+            card.innerHTML = `
+                <div class="bg-card-info">
+                    <div class="bg-card-title">${bg.name} ${isCurrentlyShown ? '🔍' : ''}</div>
+                    <div style="font-size: 11px; color: #888;">${bg.desc}</div>
+                    <div class="bg-card-price" style="margin-top: 6px;">${isOwned ? '✅ В коллекции' : '🪙 ' + bg.price}</div>
+                </div>
+                ${btnHtml}
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function buyBg(bgId, price) {
+        if (coins >= price) {
+            if (bgId === 'bg-custom') {
+                const url = prompt('Введите URL-ссылку на изображение вашего фона:');
+                if (!url) return;
+                customBgUrl = url;
+            }
+
+            coins -= price;
+            purchasedBgs.push(bgId);
+            activeBg = bgId;
+            previewBg = null;
+            
+            saveCurrentUserData();
+            document.getElementById('coins-count').innerText = coins;
+            applyActiveBg();
+            renderBgShopPage();
+        } else {
+            alert('Недостаточно монет! Зарабатывайте монеты, успешно выполняя комбинации в тренажёре.');
+        }
+    }
+
+    function changeCustomBgUrl() {
+        const url = prompt('Введите новый URL-ссылку на изображение:', customBgUrl || '');
+        if (url) {
+            customBgUrl = url;
+            activeBg = 'bg-custom';
+            saveCurrentUserData();
+            applyActiveBg();
+            renderBgShopPage();
+        }
+    }
+
+    function equipBg(bgId) {
+        if (bgId === 'bg-custom' && !customBgUrl) {
+            changeCustomBgUrl();
+            return;
+        }
+        activeBg = bgId;
+        previewBg = null;
+        saveCurrentUserData();
+        applyActiveBg();
+        renderBgShopPage();
+    }
+
+    const dotaItemsDatabase = {
+        'Refresher': { name: 'Refresher Orb', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/refresher.png' },
+        'Hex': { name: 'Scythe of Vyse', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/sheepstick.png' },
+        'Blink': { name: 'Blink Dagger', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink.png' },
+        'BKB': { name: 'Black King Bar', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/black_king_bar.png' },
+        'Shiva': { name: "Shiva's Guard", icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/shivas_guard.png' }
+    };
+
+    let userInventory = [null, null, null, null, null, null];
+    let inventoryBinds = ['1', '2', '3', '4', '5', '6'];
+    let selectedSlotIndex = 0;
+
+    const invokerSpells = {
+        'Cold Snap': { combo: 'QQQ', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_cold_snap.png' },
+        'Ghost Walk': { combo: 'QQW', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_ghost_walk.png' },
+        'Ice Wall': { combo: 'QQE', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_ice_wall.png' },
+        'EMP': { combo: 'WWW', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_emp.png' },
+        'Tornado': { combo: 'WWQ', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_tornado.png' },
+        'Alacrity': { combo: 'WWE', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_alacrity.png' },
+        'Sun Strike': { combo: 'EEE', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_sun_strike.png' },
+        'Forge Spirit': { combo: 'EEQ', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_forge_spirit.png' },
+        'Chaos Meteor': { combo: 'EEW', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_chaos_meteor.png' },
+        'Deafening Blast': { combo: 'QWE', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_deafening_blast.png' }
+    };
+
+    const invokerPresetCombos = {
+        'short_cold_alacrity': ['Cold Snap', 'Alacrity'],
+        'short_tornado_meteor': ['Tornado', 'Chaos Meteor'],
+        'short_snap_spirits': ['Cold Snap', 'Forge Spirit'],
+        'short_tornado_emp': ['Tornado', 'EMP'],
+        'mid_classic_nado_meteor': ['Tornado', 'Chaos Meteor', 'Deafening Blast'],
+        'mid_icewall_snap': ['Cold Snap', 'Ice Wall', 'Forge Spirit'],
+        'mid_emp_nado_snap': ['Tornado', 'EMP', 'Cold Snap'],
+        'long_4spell_burst': ['Tornado', 'EMP', 'Chaos Meteor', 'Deafening Blast'],
+        'long_5spell_full': ['Tornado', 'EMP', 'Chaos Meteor', 'Deafening Blast', 'Sun Strike'],
+        'long_cataclysm_combo': ['Tornado', 'Sun Strike', 'Chaos Meteor', 'Deafening Blast', 'EMP'],
+        'custom_builder': []
+    };
+
+    let customUserCombo = [];
+    let sfSpells = {
+        'Blink': { key: 'Z', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink.png' },
+        'Eul': { key: 'X', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/cyclone.png' },
+        'BKB': { key: 'C', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/black_king_bar.png' },
+        'Requiem': { key: 'R', icon: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/nevermore_requiem.png' }
+    };
+
+    let currentOrbs = [];
+    let completedCount = 0;
+    let currentTaskChain = [];
+    let chainIndex = 0;
+
+    let startTime = 0;
+    let timerInterval = null;
+    let isPlaying = false;
+
+    let eulStartTime = 0;
+    let eulActive = false;
+    let eulInterval = null;
+    let requiemCastStart = 0;
+    const EUL_DURATION = 2500;
+    const REQUIEM_CAST_TIME = 1670;
+
+    function triggerInvokedAnimation() {
+        const iconEl = document.getElementById('invoked-icon');
+        iconEl.classList.remove('pulse-glow');
+        void iconEl.offsetWidth;
+        iconEl.classList.add('pulse-glow');
+    }
+
+    function addCoins(amount) {
+        coins += amount;
+        saveCurrentUserData();
+        document.getElementById('coins-count').innerText = coins;
+    }
+
+    function getLetterFromCode(code) {
+        if (code.startsWith('Key')) return code.replace('Key', '').toUpperCase();
+        if (code.startsWith('Digit')) return code.replace('Digit', '');
+        return null;
+    }
+
+    function updateInventoryBinds() {
+        for (let i = 0; i < 6; i++) {
+            const inputEl = document.getElementById(`key-inv-${i}`);
+            if (inputEl) {
+                const inputVal = inputEl.value;
+                inventoryBinds[i] = inputVal ? inputVal.toUpperCase() : (i + 1).toString();
+            }
+        }
+        updateInventoryUI();
+        renderComboUI();
+    }
+
+    function updateSFKeys() {
+        sfSpells['Blink'].key = (document.getElementById('key-sf-blink').value || 'Z').toUpperCase();
+        sfSpells['Eul'].key = (document.getElementById('key-sf-eul').value || 'X').toUpperCase();
+        sfSpells['BKB'].key = (document.getElementById('key-sf-bkb').value || 'C').toUpperCase();
+        sfSpells['Requiem'].key = (document.getElementById('key-sf-ult').value || 'R').toUpperCase();
+        
+        if (document.getElementById('game-mode').value === 'sf') {
+            initSFRecipes();
+            renderComboUI();
+        }
+    }
+
+    function onInventorySlotClick(slotIndex) {
+        selectedSlotIndex = slotIndex;
+        updateInventoryUI();
+    }
+
+    function onInventorySlotRightClick(event, slotIndex) {
+        event.preventDefault();
+        event.stopPropagation();
+        removeItemFromSlot(slotIndex);
+    }
+
+    function removeItemFromSlot(slotIndex) {
+        const itemKey = userInventory[slotIndex];
+        if (!itemKey) return;
+
+        userInventory[slotIndex] = null;
+
+        const isModeCombo = document.getElementById('game-mode').value === 'invoker_combo';
+        const isBuilder = document.getElementById('invoker-combo-select').value === 'custom_builder';
+
+        if (isModeCombo && isBuilder && !isPlaying) {
+            const itemIdxInCombo = customUserCombo.indexOf(itemKey);
+            if (itemIdxInCombo !== -1) {
+                customUserCombo.splice(itemIdxInCombo, 1);
+            }
+        }
+
+        updateInventoryUI();
+        generateTaskChain();
+    }
+
+    function equipItemFromShop(itemKey) {
+        const isModeCombo = document.getElementById('game-mode').value === 'invoker_combo';
+        const isBuilder = document.getElementById('invoker-combo-select').value === 'custom_builder';
+
+        let targetSlot = userInventory.indexOf(null);
+        if (targetSlot === -1) targetSlot = 5;
+
+        userInventory[targetSlot] = itemKey;
+
+        if (isModeCombo && isBuilder && !isPlaying) {
+            customUserCombo.push(itemKey);
+        }
+
+        updateInventoryUI();
+        generateTaskChain();
+    }
+
+    function resetGameState() {
+        clearInterval(timerInterval);
+        clearInterval(eulInterval);
+        isPlaying = false;
+        eulActive = false;
+        completedCount = 0;
+        currentOrbs = [];
+        chainIndex = 0;
+        
+        document.getElementById('timer-val').innerText = '00.000';
+        document.getElementById('invoke-count').innerText = '0';
+        document.getElementById('game-status').innerText = 'Нажмите N для старта';
+        document.getElementById('eul-fill-bar').style.width = '0%';
+        document.getElementById('hit-marker').style.display = 'none';
+        document.getElementById('invoked-icon').style.backgroundImage = 'none';
+        document.getElementById('invoked-name').innerText = 'Пусто';
+        updateOrbUI();
+        updateInventoryUI();
+    }
+
+    function loadLeaderboard() {
+        document.getElementById('coins-count').innerText = coins;
+
+        document.getElementById('record-speed').innerText = userRecords.speed ? `${parseFloat(userRecords.speed).toFixed(3)}s` : '--';
+        document.getElementById('record-combo').innerText = userRecords.combo ? `${parseFloat(userRecords.combo).toFixed(3)}s` : '--';
+        document.getElementById('record-sf').innerText = userRecords.sf ? `${parseFloat(userRecords.sf).toFixed(3)}s` : '--';
+    }
+
+    function onModeChange() {
+        resetGameState();
+        const mode = document.getElementById('game-mode').value;
+        const invokerSettings = document.getElementById('invoker-key-settings');
+        const sfSettings = document.getElementById('sf-key-settings');
+        const invSettings = document.getElementById('inventory-key-settings');
+        const orbsWrapper = document.getElementById('orbs-wrapper');
+        const eulArena = document.getElementById('eul-arena-box');
+        const comboSelectBox = document.getElementById('invoker-combo-select-box');
+        const gearBox = document.getElementById('gear-box');
+
+        comboSelectBox.style.display = 'none';
+        gearBox.style.display = 'none';
+        invSettings.style.display = 'none';
+
+        if (mode === 'sf') {
+            invokerSettings.style.display = 'none';
+            sfSettings.style.display = 'block';
+            orbsWrapper.style.visibility = 'hidden';
+            eulArena.style.display = 'flex';
+            updateSFKeys();
+            initSFRecipes();
+        } else if (mode === 'invoker_combo') {
+            invokerSettings.style.display = 'block';
+            sfSettings.style.display = 'none';
+            orbsWrapper.style.visibility = 'visible';
+            eulArena.style.display = 'none';
+            comboSelectBox.style.display = 'block';
+            initInvokerRecipes();
+            initShopItems();
+            onComboSelectChange();
+        } else {
+            invokerSettings.style.display = 'block';
+            sfSettings.style.display = 'none';
+            orbsWrapper.style.visibility = 'visible';
+            eulArena.style.display = 'none';
+            initInvokerRecipes();
+        }
+        generateTaskChain();
+    }
+
+    function onComboSelectChange() {
+        const comboVal = document.getElementById('invoker-combo-select').value;
+        const builderBox = document.getElementById('builder-controls-box');
+        const gearBox = document.getElementById('gear-box');
+        const invSettings = document.getElementById('inventory-key-settings');
+        
+        if (comboVal === 'custom_builder') {
+            builderBox.style.display = 'flex';
+            gearBox.style.display = 'flex';
+            invSettings.style.display = 'block';
+            document.getElementById('game-status').innerText = 'Добавляйте спеллы из списка и предметы из магазина!';
+        } else {
+            builderBox.style.display = 'none';
+            gearBox.style.display = 'none';
+            invSettings.style.display = 'none';
+        }
+        generateTaskChain();
+    }
+
+    function clearCustomBuilder() {
+        customUserCombo = [];
+        userInventory = [null, null, null, null, null, null];
+        updateInventoryUI();
+        generateTaskChain();
+    }
+
+    function initInvokerRecipes() {
+        const listEl = document.getElementById('recipes-list');
+        listEl.innerHTML = '';
+        document.getElementById('recipes-title').innerText = 'Заклинания Invoker';
+        for (let key in invokerSpells) {
+            const spell = invokerSpells[key];
+            const div = document.createElement('div');
+            div.className = 'recipe-item';
+            div.onclick = () => {
+                if (document.getElementById('invoker-combo-select').value === 'custom_builder' && !isPlaying) {
+                    customUserCombo.push(key);
+                    generateTaskChain();
+                }
+            };
+            div.innerHTML = `
+                <div class="recipe-left">
+                    <div class="mini-icon" style="background-image: url('${spell.icon}')"></div>
+                    <span>${key}</span>
+                </div>
+                <span>${formatCombo(spell.combo)}</span>
+            `;
+            listEl.appendChild(div);
+        }
+    }
+
+    function initShopItems() {
+        const shopGrid = document.getElementById('shop-items-grid');
+        shopGrid.innerHTML = '';
+        for (let itemKey in dotaItemsDatabase) {
+            const item = dotaItemsDatabase[itemKey];
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            div.onclick = () => equipItemFromShop(itemKey);
+            div.innerHTML = `
+                <div class="shop-item-icon" style="background-image: url('${item.icon}')"></div>
+                <div class="shop-item-name">${item.name}</div>
+            `;
+            shopGrid.appendChild(div);
+        }
+    }
+
+    function initSFRecipes() {
+        const listEl = document.getElementById('recipes-list');
+        listEl.innerHTML = '';
+        document.getElementById('recipes-title').innerText = 'Клавиши SF';
+        for (let key in sfSpells) {
+            const spell = sfSpells[key];
+            const div = document.createElement('div');
+            div.className = 'recipe-item';
+            div.innerHTML = `
+                <div class="recipe-left">
+                    <div class="mini-icon" style="background-image: url('${spell.icon}')"></div>
+                    <span>${key}</span>
+                </div>
+                <b style="color:#e2b041;">[${spell.key}]</b>
+            `;
+            listEl.appendChild(div);
+        }
+    }
+
+    function formatCombo(combo) {
+        return combo.split('').map(char => {
+            if (char === 'Q') return '<b style="color:#3498db;">Q</b>';
+            if (char === 'W') return '<b style="color:#9b59b6;">W</b>';
+            if (char === 'E') return '<b style="color:#e67e22;">E</b>';
+        }).join(' ');
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const pressedKey = getLetterFromCode(e.code);
+
+        if (pressedKey === 'N') { e.preventDefault(); startGame(); return; }
+        if (pressedKey === 'M') { e.preventDefault(); restartGame(); return; }
+
+        if (!isPlaying || !pressedKey) return;
+        const mode = document.getElementById('game-mode').value;
+
+        if (mode === 'sf') {
+            handleSFInput(pressedKey);
+        } else {
+            if (['Q', 'W', 'E'].includes(pressedKey)) {
+                if (currentOrbs.length >= 3) currentOrbs.shift();
+                currentOrbs.push(pressedKey);
+                updateOrbUI();
+            } else if (pressedKey === 'R') {
+                invokeSpell();
+            } else if (mode === 'invoker_combo') {
+                const slotIdx = inventoryBinds.indexOf(pressedKey);
+                if (slotIdx !== -1 && userInventory[slotIdx]) {
+                    useItem(userInventory[slotIdx]);
+                }
+            }
+        }
+    });
+
+    function useItem(itemKey) {
+        const expected = currentTaskChain[chainIndex];
+        const itemData = dotaItemsDatabase[itemKey];
+        if (!itemData) return;
+
+        document.getElementById('invoked-icon').style.backgroundImage = `url('${itemData.icon}')`;
+        document.getElementById('invoked-name').innerText = itemData.name;
+        triggerInvokedAnimation();
+
+        if (itemKey === expected) {
+            addCoins(2);
+            createCastBurstEffect('#9b59b6', 20);
+            animateSuccessStep(chainIndex);
+            chainIndex++;
+            updateComboUI();
+            checkChainProgress();
+        } else {
+            chainIndex = 0;
+            updateComboUI();
+            document.getElementById('game-status').innerText = '❌ Ошибка в прокасте! Начните сначала.';
+        }
+    }
+
+    function animateSuccessStep(idx) {
+        const card = document.getElementById(`spell-card-${idx}`);
+        if (card) {
+            card.classList.remove('spell-card-success');
+            void card.offsetWidth;
+            card.classList.add('spell-card-success');
+        }
+    }
+
+    function handleSFInput(key) {
+        const expectedSpellName = currentTaskChain[chainIndex];
+        const expectedKey = sfSpells[expectedSpellName].key;
+
+        let castedSpellName = '';
+        for (let name in sfSpells) {
+            if (sfSpells[name].key === key) castedSpellName = name;
+        }
+
+        if (castedSpellName) {
+            document.getElementById('invoked-icon').style.backgroundImage = `url('${sfSpells[castedSpellName].icon}')`;
+            document.getElementById('invoked-name').innerText = castedSpellName;
+            triggerInvokedAnimation();
+        }
+
+        if (key === expectedKey) {
+            createCastBurstEffect('#e74c3c', 20);
+            animateSuccessStep(chainIndex);
+
+            if (expectedSpellName === 'Eul') triggerEul();
+            if (expectedSpellName === 'Requiem') {
+                if (!eulActive) { failSFTiming('Реквием кастован без Eul!'); return; }
+                
+                requiemCastStart = Date.now();
+                const elapsedEul = requiemCastStart - eulStartTime;
+                const requiemLandTime = elapsedEul + REQUIEM_CAST_TIME;
+                const hitPosPercent = (elapsedEul / EUL_DURATION) * 100;
+
+                const hitMarker = document.getElementById('hit-marker');
+                hitMarker.style.left = `${hitPosPercent}%`;
+                hitMarker.style.display = 'block';
+
+                const timingDiff = requiemLandTime - EUL_DURATION;
+                if (Math.abs(timingDiff) > 120) {
+                    const diffText = timingDiff < 0 
+                        ? `Слишком рано на ${Math.abs(timingDiff)}мс!` 
+                        : `Слишком поздно на ${Math.abs(timingDiff)}мс!`;
+                    failSFTiming(diffText);
+                    return;
+                }
+
+                const precisionBonus = Math.max(5, 20 - Math.floor(Math.abs(timingDiff) / 10));
+                addCoins(precisionBonus);
+                createCastBurstEffect('#f1c40f', 50);
+            }
+
+            chainIndex++;
+            updateComboUI();
+
+            if (chainIndex >= currentTaskChain.length) {
+                completedCount++;
+                document.getElementById('invoke-count').innerText = completedCount;
+                document.getElementById('eul-status-text').innerText = '🎯 ИДЕАЛЬНЫЙ ТАЙМИНГ!';
+                document.getElementById('eul-status-text').style.color = '#2ecc71';
+
+                if (completedCount >= 10) {
+                    finishGame(true);
+                } else {
+                    setTimeout(() => { if (isPlaying) generateTaskChain(); }, 600);
+                }
+            }
+        } else if (castedSpellName) {
+            failSFTiming('Неверная последовательность!');
+        }
+    }
+
+    function triggerEul() {
+        eulActive = true;
+        eulStartTime = Date.now();
+        document.getElementById('hit-marker').style.display = 'none';
+        document.getElementById('eul-status-text').innerText = '🌪️ Враг в воздухе! Кастуйте Requiem...';
+        document.getElementById('eul-status-text').style.color = '#e2b041';
+
+        clearInterval(eulInterval);
+        eulInterval = setInterval(() => {
+            const elapsed = Date.now() - eulStartTime;
+            const progress = Math.min(100, (elapsed / EUL_DURATION) * 100);
+            document.getElementById('eul-fill-bar').style.width = `${progress}%`;
+
+            if (elapsed >= EUL_DURATION) {
+                clearInterval(eulInterval);
+                eulActive = false;
+                if (chainIndex < currentTaskChain.length && chainIndex > 0) {
+                    failSFTiming('Время действия Eul истекло!');
+                }
+            }
+        }, 15);
+    }
+
+    function failSFTiming(msg) {
+        clearInterval(eulInterval);
+        eulActive = false;
+        chainIndex = 0;
+        document.getElementById('eul-status-text').innerText = `❌ ${msg}`;
+        document.getElementById('eul-status-text').style.color = '#e74c3c';
+        updateComboUI();
+    }
+
+    function updateOrbUI() {
+        for (let i = 0; i < 3; i++) {
+            const orbEl = document.getElementById(`orb${i + 1}`);
+            orbEl.className = 'orb-slot';
+            orbEl.innerText = '';
+            if (currentOrbs[i]) {
+                const orbChar = currentOrbs[i];
+                orbEl.classList.add(`orb-${orbChar.toLowerCase()}`);
+                orbEl.innerText = orbChar;
+            }
+        }
+    }
+
+    function updateInventoryUI() {
+        const mode = document.getElementById('game-mode').value;
+        const comboVal = document.getElementById('invoker-combo-select').value;
+        if (mode !== 'invoker_combo' || comboVal !== 'custom_builder') return;
+
+        for (let i = 0; i < 6; i++) {
+            const slot = document.getElementById(`inv-slot-${i}`);
+            slot.style.backgroundImage = 'none';
+            slot.className = 'inventory-slot';
+            slot.innerHTML = '';
+
+            if (i === selectedSlotIndex) {
+                slot.classList.add('selected');
+            }
+
+            const itemKey = userInventory[i];
+            if (itemKey && dotaItemsDatabase[itemKey]) {
+                slot.style.backgroundImage = `url('${dotaItemsDatabase[itemKey].icon}')`;
+                
+                const removeBtn = document.createElement('div');
+                removeBtn.className = 'slot-remove-btn has-item';
+                removeBtn.innerText = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeItemFromSlot(i);
+                };
+
+                const bindSpan = document.createElement('span');
+                bindSpan.className = 'item-key-bind';
+                bindSpan.innerText = inventoryBinds[i];
+
+                slot.appendChild(removeBtn);
+                slot.appendChild(bindSpan);
+
+                if (currentTaskChain[chainIndex] === itemKey) {
+                    slot.classList.add('active-item');
+                }
+            }
+        }
+    }
+
+    function invokeSpell() {
+        if (currentOrbs.length < 3) return;
+        
+        const sortedCombo = [...currentOrbs].sort().join('');
+        let castedSpellKey = null;
+
+        for (let key in invokerSpells) {
+            if (invokerSpells[key].combo.split('').sort().join('') === sortedCombo) {
+                castedSpellKey = key;
+                break;
+            }
+        }
+
+        if (castedSpellKey) {
+            const spell = invokerSpells[castedSpellKey];
+            document.getElementById('invoked-icon').style.backgroundImage = `url('${spell.icon}')`;
+            document.getElementById('invoked-name').innerText = castedSpellKey;
+            triggerInvokedAnimation();
+
+            const mode = document.getElementById('game-mode').value;
+
+            if (castedSpellKey === currentTaskChain[chainIndex]) {
+                addCoins(3);
+                createCastBurstEffect('#e2b041', 25);
+                animateSuccessStep(chainIndex);
+                chainIndex++;
+                updateComboUI();
+                checkChainProgress();
+            } else if (mode === 'invoker_combo') {
+                chainIndex = 0;
+                updateComboUI();
+                document.getElementById('game-status').innerText = '❌ Ошибка в прокасте! Начните сначала.';
+            }
+        }
+    }
+
+    function checkChainProgress() {
+        const mode = document.getElementById('game-mode').value;
+        updateInventoryUI();
+
+        if (chainIndex >= currentTaskChain.length) {
+            completedCount++;
+            document.getElementById('invoke-count').innerText = completedCount;
+            createCastBurstEffect('#2ecc71', 45);
+            
+            if ((mode === 'speed' || mode === 'invoker_combo') && completedCount >= (mode === 'invoker_combo' ? 5 : 10)) {
+                finishGame(true);
+            } else {
+                generateTaskChain();
+            }
+        }
+    }
+
+    function generateTaskChain() {
+        const mode = document.getElementById('game-mode').value;
+
+        if (mode === 'sf') {
+            currentTaskChain = ['Blink', 'Eul', 'BKB', 'Requiem'];
+            document.getElementById('eul-fill-bar').style.width = '0%';
+            document.getElementById('hit-marker').style.display = 'none';
+            document.getElementById('eul-status-text').innerText = `Нажмите Blink [${sfSpells['Blink'].key}], затем Eul [${sfSpells['Eul'].key}]`;
+            document.getElementById('eul-status-text').style.color = '#fff';
+        } else if (mode === 'invoker_combo') {
+            const selectedKey = document.getElementById('invoker-combo-select').value;
+            if (selectedKey === 'custom_builder') {
+                currentTaskChain = [...customUserCombo];
+            } else {
+                currentTaskChain = [...invokerPresetCombos[selectedKey]];
+            }
+        } else {
+            const keys = Object.keys(invokerSpells);
+            const randKey = keys[Math.floor(Math.random() * keys.length)];
+            currentTaskChain = [randKey];
+        }
+        
+        chainIndex = 0;
+        renderComboUI();
+        updateInventoryUI();
+    }
+
+    function getItemBindKey(itemKey) {
+        const slotIdx = userInventory.indexOf(itemKey);
+        if (slotIdx !== -1) return inventoryBinds[slotIdx];
+        return '?';
+    }
+
+    function renderComboUI() {
+        const container = document.getElementById('combo-container');
+        container.innerHTML = '';
+        const mode = document.getElementById('game-mode').value;
+
+        currentTaskChain.forEach((elementKey, idx) => {
+            let iconUrl = '';
+            let keyHint = '';
+
+            if (mode === 'sf') {
+                iconUrl = sfSpells[elementKey].icon;
+                keyHint = `[${sfSpells[elementKey].key}]`;
+            } else if (invokerSpells[elementKey]) {
+                iconUrl = invokerSpells[elementKey].icon;
+            } else if (dotaItemsDatabase[elementKey]) {
+                iconUrl = dotaItemsDatabase[elementKey].icon;
+                keyHint = `[${getItemBindKey(elementKey)}]`;
+            }
+
+            const card = document.createElement('div');
+            card.className = `spell-card ${idx === 0 ? 'active' : ''}`;
+            card.id = `spell-card-${idx}`;
+            card.innerHTML = `
+                <div class="spell-icon-large" style="background-image: url('${iconUrl}')"></div>
+                <div class="spell-name-text">${elementKey} ${keyHint}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function updateComboUI() {
+        currentTaskChain.forEach((_, idx) => {
+            const card = document.getElementById(`spell-card-${idx}`);
+            if (!card) return;
+            if (idx < chainIndex) {
+                card.className = 'spell-card done';
+            } else if (idx === chainIndex) {
+                card.className = 'spell-card active';
+            } else {
+                card.className = 'spell-card';
+            }
+        });
+        updateInventoryUI();
+    }
+
+    function formatTime(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const millis = Math.floor(ms % 1000);
+        return `${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
+    }
+
+    function startGame() {
+        if (currentTaskChain.length === 0) {
+            alert('Сначала добавьте заклинания или предметы в прокаст!');
+            return;
+        }
+
+        clearInterval(timerInterval);
+        clearInterval(eulInterval);
+        eulActive = false;
+        isPlaying = true;
+        completedCount = 0;
+        currentOrbs = [];
+        updateOrbUI();
+        document.getElementById('invoke-count').innerText = completedCount;
+
+        const mode = document.getElementById('game-mode').value;
+        document.getElementById('target-count').innerText = mode === 'invoker_combo' ? '5' : '10';
+        
+        generateTaskChain();
+        startTime = Date.now();
+
+        if (mode === 'sf') {
+            document.getElementById('game-status').innerText = 'Режим: SF Комбо Тайминг';
+        } else if (mode === 'invoker_combo') {
+            document.getElementById('game-status').innerText = 'Режим: Выполнение Прокаста';
+        } else {
+            document.getElementById('game-status').innerText = 'Режим: Скорость (10 кастов)';
+        }
+
+        timerInterval = setInterval(() => {
+            document.getElementById('timer-val').innerText = formatTime(Date.now() - startTime);
+        }, 10);
+    }
+
+    function restartGame() {
+        resetGameState();
+        generateTaskChain();
+    }
+
+    function finishGame(isWin) {
+        clearInterval(timerInterval);
+        clearInterval(eulInterval);
+        isPlaying = false;
+
+        const mode = document.getElementById('game-mode').value;
+        const elapsed = Date.now() - startTime;
+        const finalTimeSeconds = (elapsed / 1000).toFixed(3);
+
+        let timeBonusCoins = Math.max(10, Math.floor(100 - parseFloat(finalTimeSeconds) * 3));
+        addCoins(timeBonusCoins);
+
+        if (mode === 'sf') {
+            let isNewRecord = !userRecords.sf || parseFloat(finalTimeSeconds) < parseFloat(userRecords.sf);
+            if (isNewRecord) userRecords.sf = finalTimeSeconds;
+
+            saveCurrentUserData();
+            loadLeaderboard();
+            document.getElementById('game-status').innerText = 'SF Комбо завершено!';
+            setTimeout(() => { alert(`🔥 Выполнено 10 комбо SF!\nВремя: ${finalTimeSeconds}с\nЗаработано монет: +${timeBonusCoins}🪙`); }, 50);
+
+        } else if (mode === 'invoker_combo') {
+            let isNewRecord = !userRecords.combo || parseFloat(finalTimeSeconds) < parseFloat(userRecords.combo);
+            if (isNewRecord) userRecords.combo = finalTimeSeconds;
+
+            saveCurrentUserData();
+            loadLeaderboard();
+            document.getElementById('game-status').innerText = 'Прокасты Инвокера Выполнены!';
+            setTimeout(() => { alert(`🧙‍♂️ Выполнено 5 прокастов!\nВремя: ${finalTimeSeconds}с\nЗаработано монет: +${timeBonusCoins}🪙`); }, 50);
+
+        } else {
+            let isNewRecord = !userRecords.speed || parseFloat(finalTimeSeconds) < parseFloat(userRecords.speed);
+            if (isNewRecord) userRecords.speed = finalTimeSeconds;
+
+            saveCurrentUserData();
+            loadLeaderboard();
+            document.getElementById('game-status').innerText = 'Завершено!';
+            setTimeout(() => { alert(`🏁 Выполнено 10 кастов!\nВремя: ${finalTimeSeconds}с\nЗаработано монет: +${timeBonusCoins}🪙`); }, 50);
+        }
+    }
+
+    initInvokerRecipes();
+    initAuth();
+    onModeChange();
+</script>
+
+</body>
+</html>
